@@ -55,6 +55,7 @@ h1 span{display:block;white-space:nowrap;width:max-content}
 .flabel{align-self:flex-end}
 .chip{all:unset;cursor:pointer;font-size:13px;padding:5px 10px;border:1px solid var(--line);border-radius:999px}
 .chip i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:2px}
+.chip:disabled{opacity:.35;cursor:default}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .chip[aria-pressed="true"] i{color:var(--accent-fg)}
 .fbtn:focus-visible,.chip:focus-visible,.freset:focus-visible,#flabelsel:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -321,7 +322,9 @@ function renderFilter(now){
   const pool=SHOPS.flatMap(S=>(S.items||[]).filter(r=>view==="home"?r.m===now:r.m<now));
   const count=(fn)=>{const m=new Map();pool.forEach(r=>fn(r).forEach(x=>m.set(x,(m.get(x)||0)+1)));return m};
   const gm=count(genresOf), lm=count(r=>[r.l]);
-  const genres=[...new Set([...gm.keys(),...flt.genres])].sort((a,b)=>a.localeCompare(b,"de"));
+  const CORE=["House","Deep House","Tech House","Minimal","Techno","Dub Techno","Electro","Acid House","Balearic","Ambient","Lo-Fi House","Disco","Italo Disco"];
+  const rest=[...new Set([...gm.keys(),...flt.genres])].filter(g=>!CORE.includes(g)).sort((a,b)=>a.localeCompare(b,"en"));
+  const genres=[...CORE,...rest];
   const labels=[...new Set([...lm.keys(),...(flt.label?[flt.label]:[])])].sort((a,b)=>a.localeCompare(b,"de"));
   const n=flt.genres.size+(flt.label?1:0);
   const hits=pool.filter(matches).length;
@@ -330,7 +333,7 @@ function renderFilter(now){
     ${n?`<button class="freset" id="freset">Clear</button>`:""}</div>
     <div class="fpanel" ${fltOpen?"":"hidden"}>
       <div class="flabel">Genre</div>
-      <div class="chips">${genres.map(g=>`<button class="chip" aria-pressed="${flt.genres.has(g)}" data-g="${esc(g)}">${esc(g)} <i>${gm.get(g)||0}</i></button>`).join("")||'<span class="fnone">No genres</span>'}</div>
+      <div class="chips">${genres.map(g=>`<button class="chip" aria-pressed="${flt.genres.has(g)}" data-g="${esc(g)}"${!(gm.get(g)||0)&&!flt.genres.has(g)?" disabled":""}>${esc(g)} <i>${gm.get(g)||0}</i></button>`).join("")||'<span class="fnone">No genres</span>'}</div>
       <label class="flabel" for="flabelsel">Label</label>
       <select id="flabelsel"><option value="">All labels (${labels.length})</option>${labels.map(l=>`<option value="${esc(l)}"${l===flt.label?" selected":""}>${esc(l)} (${lm.get(l)||0})</option>`).join("")}</select>
     </div>`;
